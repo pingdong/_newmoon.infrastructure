@@ -1,11 +1,11 @@
 # Shared resources
 
-### **BUILD STATUS**
+### **BUILD STATUS** 
+Develop Branch<br />
+[![Build Status](https://pingdong.visualstudio.com/Newmoon/_apis/build/status/Shared?branchName=develop)](https://pingdong.visualstudio.com/Newmoon/_build/latest?definitionId=33&branchName=develop) 
+
 Master Branch<br />
 [![Build Status](https://pingdong.visualstudio.com/Newmoon/_apis/build/status/Shared?branchName=master)](https://pingdong.visualstudio.com/Newmoon/_build/latest?definitionId=33&branchName=master)
-
-Develop Branch<br />
-[![Build Status](https://pingdong.visualstudio.com/Newmoon/_apis/build/status/Shared?branchName=develop)](https://pingdong.visualstudio.com/Newmoon/_build/latest?definitionId=33&branchName=develop)
 
 ### **DEPLOY STATUS**
 
