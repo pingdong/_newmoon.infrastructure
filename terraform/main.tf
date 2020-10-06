@@ -1,0 +1,230 @@
+# More information on the authentication methods supported by
+# the AzureRM Provider can be found here:
+# http://terraform.io/docs/providers/azurerm/index.html
+
+terraform {
+  required_version  = ">=0.13.1"
+
+  required_providers {
+    azurerm         = {
+      source        = "hashicorp/azurerm"
+      version       = ">= 2.30.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {
+    key_vault {
+      purge_soft_delete_on_destroy = var.local_development
+    }
+  }
+}
+
+locals {
+  tags              = merge(
+                        map(
+                          "service", var.service, 
+                          "environment", var.environment
+                        ),
+                        var.tags
+                      )
+
+  name-suffix       = "${var.service}-${var.environment}-<name>%{ if var.integration_testing.suffix != "" }-${var.integration_testing.suffix}%{ endif }"
+  name              = "${var.service}-${var.environment}-<name>"
+  
+  # Resource Groups
+  rg-compute        = "${var.service}-${var.environment}-compute"
+  rg-data           = "${var.service}-${var.environment}-data"
+  rg-it             = "${var.service}-${var.environment}-${var.integration_testing.suffix}"
+  rg-it-shared      = "${var.service}-${var.environment}"
+
+  # Keys
+  kv-secret-ac             = "AppConfiguration-ConnectionString"
+  connection_string-ac     = "AppConfiguration"
+
+  # Functions
+  functionApps      = list(
+                        {
+                          name          = "venue"
+                          app_settings  = {}
+                        }
+                      )
+  functionAppKeys   = [for fa in local.functionApps : fa.name]
+  functions         = var.target == "general" ? local.functionApps : matchkeys(local.functionApps, local.functionAppKeys, var.integration_testing.features)
+}
+
+# Resource Group
+#   Integration Testing Shared
+module "rg-integration_test-shared" {
+  source              = "./modules/resource_group"
+  count               = var.target == "integration_test-shared" ? 1 : 0
+
+  name                = local.rg-it-shared
+  tags                = local.tags
+  location            = var.location
+}
+module "rg-integration_test" {
+  source              = "./modules/resource_group"
+  count               = var.target == "integration_test" ? 1 : 0
+
+  name                = local.rg-it
+  tags                = local.tags
+  location            = var.location
+}
+#   SIT / QA / UAT / Production
+module "rg-compute" {
+  source              = "./modules/resource_group"
+  count               = var.target == "general" ? 1 : 0
+
+  name                = local.rg-compute
+  tags                = local.tags
+  location            = var.location
+}
+module "rg-data" {
+  source              = "./modules/resource_group"
+  count               = var.target == "general" ? 1 : 0
+
+  name                = local.rg-data
+  tags                = local.tags  
+  location            = var.location
+}
+
+# Key Vault
+module "key_vault" {
+  source              = "./modules/key_vault"
+  count               = var.target == "general" ? 1 : 0
+
+  resource_group      = module.rg-compute[0].name
+  name                = replace(local.name, "<name>", "kv1")
+  tags                = local.tags
+  
+  sku                 = "standard"
+  default_acl_action  = var.local_development ? "Allow" : "Deny"
+
+  depends_on          = [
+                          module.rg-compute
+                        ]
+}
+
+# App Configuration
+module "app_configuration" {
+  source              = "./modules/app_configuration"
+  count               = var.target == "integration_test" ? 0 : 1
+
+  resource_group      = var.target == "general" ? module.rg-compute[0].name : module.rg-integration_test-shared[0].name
+  name                = replace(local.name, "<name>", "ac")
+  tags                = local.tags
+
+  sku                 = "standard"
+
+  depends_on          = [
+                          module.rg-compute,
+                          module.rg-integration_test-shared
+                        ]
+}
+resource "azurerm_key_vault_secret" "app_configuration" {
+  count               = var.target == "general" ? 1 : 0
+
+  key_vault_id        = module.key_vault[0].id
+  name                = local.kv-secret-ac
+  value               = module.app_configuration[0].connection_string
+
+  depends_on          = [
+                          module.key_vault,
+                          module.app_configuration
+                        ]
+}
+data "azurerm_app_configuration" "integration_test" {
+  count               = var.target == "integration_test" ? 1 : 0
+
+  name                = replace(local.name, "<name>", "ac")
+  resource_group_name = local.rg-it-shared
+}
+
+# Application Insight
+module "application_insights" {
+  source              = "./modules/application_insights"
+  count               = var.target == "integration_test" ? 0 : 1
+
+  resource_group      = var.target == "general" ? module.rg-compute[0].name : module.rg-integration_test-shared[0].name
+  name                = replace(local.name, "<name>", "ai")
+  tags                = local.tags
+
+  application_type    = "web"
+
+  depends_on          = [
+                          module.rg-compute,
+                          module.rg-integration_test-shared
+                        ]
+}
+data "azurerm_application_insights" "integration_test" {
+  count               = var.target == "integration_test" ? 1 : 0
+
+  name                = replace(local.name, "<name>", "ai")
+  resource_group_name = local.rg-it-shared
+}
+
+# Func Apps
+module "asp-func_serverless" {
+  source              = "./modules/app_service_plan"
+  count               = var.target == "integration_test-shared" || length(local.functions) == 0 ? 0 : 1
+
+  resource_group      = var.target == "general" ? module.rg-compute[0].name : module.rg-integration_test[0].name
+  name                = replace(local.name-suffix, "<name>", "asp-func")
+  tags                = local.tags
+
+  kind                = "functionapp"
+  tier                = "Dynamic"
+  size                = "Y1"
+
+  depends_on          = [
+                          module.rg-compute,
+                          module.rg-integration_test.name
+                        ]
+}
+module "storage_account-func" {
+  source              = "./modules/storage_account"
+  count               = var.target == "integration_test-shared" || length(local.functions) == 0 ? 0 : 1
+
+  resource_group      = var.target == "general" ? module.rg-compute[0].name : module.rg-integration_test[0].name
+  name                = lower( replace( replace(local.name-suffix, "<name>", "sa-func"), "-", "") )
+  tags                = local.tags
+  
+  tier                = "Standard"
+
+  depends_on          = [
+                          module.rg-compute,
+                          module.rg-integration_test.name
+                        ]
+}
+module "func" {
+  count                     = length(local.functions)
+  
+  source                    = "./modules/func_app"
+  
+  resource_group            = var.target == "general" ? module.rg-compute[0].name : module.rg-integration_test[0].name
+  name                      = replace(local.name-suffix, "<name>", "func-${local.functions[count.index].name}")
+  tags                      = local.tags
+
+  app_service_plan          = module.asp-func_serverless[0].name
+  storage_account           = module.storage_account-func[0].name
+  app_settings              = merge(
+                                map(
+                                  "APPINSIGHTS_INSTRUMENTATIONKEY", var.target == "general" ? module.application_insights[0].instrumentation_key : data.azurerm_application_insights.integration_test[0].instrumentation_key
+                                ),
+                                local.functions[count.index].app_settings
+                              )
+  connection_strings        = [{
+                                name  = local.connection_string-ac 
+                                type  = "Custom" 
+                                value = var.target == "general" ? replace("@Microsoft.KeyVault(SecretUri=<id>)", "<id>", azurerm_key_vault_secret.app_configuration[0].id) : data.azurerm_app_configuration.integration_test[0].primary_read_key.0.connection_string
+                              }]
+
+  depends_on                = [
+                                module.rg-compute,
+                                module.asp-func_serverless,
+                                module.storage_account-func,
+                                module.application_insights
+                              ]
+}
