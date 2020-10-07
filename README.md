@@ -1,0 +1,1 @@
+This repository contains all resources are needed for the Newmoon projects.
