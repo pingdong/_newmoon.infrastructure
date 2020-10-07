@@ -18,8 +18,8 @@ resource "azurerm_key_vault" "current" {
   soft_delete_retention_days  = 7
   purge_protection_enabled    = false
 
-  network_acls {
-    default_action            = var.default_acl_action
+  network_acls {    
+    default_action            = var.default_acl_action    # Need relax some restrictions in local development
     bypass                    = "AzureServices"
   }
 
@@ -31,7 +31,7 @@ resource "azurerm_key_vault" "current" {
       "set",
       "get",
       "delete",
-      "list"
+      "list"      # Terraform need to read secrets on the plan stage
     ]
   }
 }

@@ -26,6 +26,9 @@ resource "azurerm_function_app" "current" {
            
   app_settings                = var.app_settings 
   
+  # Creating multiple Connection_String blocks
+  # When the Function App requires multiple connections, Azure SQL, Cosmos Db, etc
+  # Connection_String block is not assignable
   dynamic "connection_string"   {
                                   iterator = connection
                                   for_each = var.connection_strings
@@ -38,6 +41,7 @@ resource "azurerm_function_app" "current" {
                                 } 
 }
 
+# Creating slot(s) based on the input variable
 resource "azurerm_function_app_slot" "current" {
   count                      = length(var.slots)
 

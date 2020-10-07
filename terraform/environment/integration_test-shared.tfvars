@@ -1,3 +1,4 @@
+# Creating the shared resources of the integration testings
 
 service             = "newmoon"
 environment         = "it"

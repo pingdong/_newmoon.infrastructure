@@ -16,12 +16,14 @@ terraform {
 provider "azurerm" {
   features {
     key_vault {
+      # For local develpment and debugging convenice
       purge_soft_delete_on_destroy = var.local_development
     }
   }
 }
 
 locals {
+  # Tags Chain to make sure of adding common tags to all resources
   tags              = merge(
                         map(
                           "service", var.service, 
@@ -29,7 +31,8 @@ locals {
                         ),
                         var.tags
                       )
-
+  
+  # The reason of using <> as placeholder is <> is invalid for most resources. It avoids unintent errors.
   name-suffix       = "${var.service}-${var.environment}-<name>%{ if var.integration_testing.suffix != "" }-${var.integration_testing.suffix}%{ endif }"
   name              = "${var.service}-${var.environment}-<name>"
   
@@ -39,26 +42,34 @@ locals {
   rg-it             = "${var.service}-${var.environment}-${var.integration_testing.suffix}"
   rg-it-shared      = "${var.service}-${var.environment}"
 
-  # Keys
-  kv-secret-ac             = "AppConfiguration-ConnectionString"
-  connection_string-ac     = "AppConfiguration"
+  # Configuration Keys
+  kv-secret-ac              = "AppConfiguration-ConnectionString"
+  connection_string-ac      = "AppConfiguration"
 
+  # Target
+  target                    = {
+    general                 = "general"
+    integration_test-shared = "integration_test-shared"
+    integration_test        = "integrtion_test"
+  }
   # Functions
+  #    Providing variables of all func apps here to create multiple func apps easily
   functionApps      = list(
                         {
                           name          = "venue"
                           app_settings  = {}
                         }
                       )
+  #   Building keys list for filtering out func apps that do(es)n't include in the current testing
   functionAppKeys   = [for fa in local.functionApps : fa.name]
-  functions         = var.target == "general" ? local.functionApps : matchkeys(local.functionApps, local.functionAppKeys, var.integration_testing.features)
+  functions         = var.target == local.target.general ? local.functionApps : matchkeys(local.functionApps, local.functionAppKeys, var.integration_testing.features)
 }
 
 # Resource Group
 #   Integration Testing Shared
 module "rg-integration_test-shared" {
   source              = "./modules/resource_group"
-  count               = var.target == "integration_test-shared" ? 1 : 0
+  count               = var.target == local.target.integration_test-shared ? 1 : 0
 
   name                = local.rg-it-shared
   tags                = local.tags
@@ -66,7 +77,7 @@ module "rg-integration_test-shared" {
 }
 module "rg-integration_test" {
   source              = "./modules/resource_group"
-  count               = var.target == "integration_test" ? 1 : 0
+  count               = var.target == local.target.integration_test ? 1 : 0
 
   name                = local.rg-it
   tags                = local.tags
@@ -75,7 +86,7 @@ module "rg-integration_test" {
 #   SIT / QA / UAT / Production
 module "rg-compute" {
   source              = "./modules/resource_group"
-  count               = var.target == "general" ? 1 : 0
+  count               = var.target == local.target.general ? 1 : 0
 
   name                = local.rg-compute
   tags                = local.tags
@@ -83,7 +94,7 @@ module "rg-compute" {
 }
 module "rg-data" {
   source              = "./modules/resource_group"
-  count               = var.target == "general" ? 1 : 0
+  count               = var.target == local.target.general ? 1 : 0
 
   name                = local.rg-data
   tags                = local.tags  
@@ -93,13 +104,14 @@ module "rg-data" {
 # Key Vault
 module "key_vault" {
   source              = "./modules/key_vault"
-  count               = var.target == "general" ? 1 : 0
+  count               = var.target == local.target.general ? 1 : 0
 
   resource_group      = module.rg-compute[0].name
-  name                = replace(local.name, "<name>", "kv1")
+  name                = replace(local.name, "<name>", "kv")
   tags                = local.tags
   
   sku                 = "standard"
+  #                     Relax restriction for local development
   default_acl_action  = var.local_development ? "Allow" : "Deny"
 
   depends_on          = [
@@ -110,9 +122,9 @@ module "key_vault" {
 # App Configuration
 module "app_configuration" {
   source              = "./modules/app_configuration"
-  count               = var.target == "integration_test" ? 0 : 1
+  count               = var.target == local.target.integration_test ? 0 : 1
 
-  resource_group      = var.target == "general" ? module.rg-compute[0].name : module.rg-integration_test-shared[0].name
+  resource_group      = var.target == local.target.general ? module.rg-compute[0].name : module.rg-integration_test-shared[0].name
   name                = replace(local.name, "<name>", "ac")
   tags                = local.tags
 
@@ -124,7 +136,7 @@ module "app_configuration" {
                         ]
 }
 resource "azurerm_key_vault_secret" "app_configuration" {
-  count               = var.target == "general" ? 1 : 0
+  count               = var.target == local.target.general ? 1 : 0
 
   key_vault_id        = module.key_vault[0].id
   name                = local.kv-secret-ac
@@ -136,7 +148,7 @@ resource "azurerm_key_vault_secret" "app_configuration" {
                         ]
 }
 data "azurerm_app_configuration" "integration_test" {
-  count               = var.target == "integration_test" ? 1 : 0
+  count               = var.target == local.target.integration_test ? 1 : 0
 
   name                = replace(local.name, "<name>", "ac")
   resource_group_name = local.rg-it-shared
@@ -145,9 +157,9 @@ data "azurerm_app_configuration" "integration_test" {
 # Application Insight
 module "application_insights" {
   source              = "./modules/application_insights"
-  count               = var.target == "integration_test" ? 0 : 1
+  count               = var.target == local.target.integration_test ? 0 : 1
 
-  resource_group      = var.target == "general" ? module.rg-compute[0].name : module.rg-integration_test-shared[0].name
+  resource_group      = var.target == local.target.general ? module.rg-compute[0].name : module.rg-integration_test-shared[0].name
   name                = replace(local.name, "<name>", "ai")
   tags                = local.tags
 
@@ -159,7 +171,7 @@ module "application_insights" {
                         ]
 }
 data "azurerm_application_insights" "integration_test" {
-  count               = var.target == "integration_test" ? 1 : 0
+  count               = var.target == local.target.integration_test ? 1 : 0
 
   name                = replace(local.name, "<name>", "ai")
   resource_group_name = local.rg-it-shared
@@ -168,9 +180,9 @@ data "azurerm_application_insights" "integration_test" {
 # Func Apps
 module "asp-func_serverless" {
   source              = "./modules/app_service_plan"
-  count               = var.target == "integration_test-shared" || length(local.functions) == 0 ? 0 : 1
+  count               = var.target == local.target.integration_test-shared || length(local.functions) == 0 ? 0 : 1
 
-  resource_group      = var.target == "general" ? module.rg-compute[0].name : module.rg-integration_test[0].name
+  resource_group      = var.target == local.target.general ? module.rg-compute[0].name : module.rg-integration_test[0].name
   name                = replace(local.name-suffix, "<name>", "asp-func")
   tags                = local.tags
 
@@ -185,9 +197,9 @@ module "asp-func_serverless" {
 }
 module "storage_account-func" {
   source              = "./modules/storage_account"
-  count               = var.target == "integration_test-shared" || length(local.functions) == 0 ? 0 : 1
+  count               = var.target == local.target.integration_test-shared || length(local.functions) == 0 ? 0 : 1
 
-  resource_group      = var.target == "general" ? module.rg-compute[0].name : module.rg-integration_test[0].name
+  resource_group      = var.target == local.target.general ? module.rg-compute[0].name : module.rg-integration_test[0].name
   name                = lower( replace( replace(local.name-suffix, "<name>", "sa-func"), "-", "") )
   tags                = local.tags
   
@@ -203,22 +215,25 @@ module "func" {
   
   source                    = "./modules/func_app"
   
-  resource_group            = var.target == "general" ? module.rg-compute[0].name : module.rg-integration_test[0].name
+  resource_group            = var.target == local.target.general ? module.rg-compute[0].name : module.rg-integration_test[0].name
   name                      = replace(local.name-suffix, "<name>", "func-${local.functions[count.index].name}")
   tags                      = local.tags
 
+  # Shared resources for all function apps
   app_service_plan          = module.asp-func_serverless[0].name
   storage_account           = module.storage_account-func[0].name
+
   app_settings              = merge(
                                 map(
-                                  "APPINSIGHTS_INSTRUMENTATIONKEY", var.target == "general" ? module.application_insights[0].instrumentation_key : data.azurerm_application_insights.integration_test[0].instrumentation_key
+                                  "APPINSIGHTS_INSTRUMENTATIONKEY", var.target == local.target.general ? module.application_insights[0].instrumentation_key : data.azurerm_application_insights.integration_test[0].instrumentation_key
                                 ),
                                 local.functions[count.index].app_settings
                               )
   connection_strings        = [{
                                 name  = local.connection_string-ac 
                                 type  = "Custom" 
-                                value = var.target == "general" ? replace("@Microsoft.KeyVault(SecretUri=<id>)", "<id>", azurerm_key_vault_secret.app_configuration[0].id) : data.azurerm_app_configuration.integration_test[0].primary_read_key.0.connection_string
+                                # Keyvault is not required in the integration testing
+                                value = var.target == local.target.general ? replace("@Microsoft.KeyVault(SecretUri=<id>)", "<id>", azurerm_key_vault_secret.app_configuration[0].id) : data.azurerm_app_configuration.integration_test[0].primary_read_key.0.connection_string
                               }]
 
   depends_on                = [

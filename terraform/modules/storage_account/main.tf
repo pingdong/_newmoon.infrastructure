@@ -2,7 +2,6 @@ data "azurerm_resource_group" "current" {
   name                        = var.resource_group
 }
 
-# Storage Account
 resource "azurerm_storage_account" "current" {
   name                      = var.name
   location                  = data.azurerm_resource_group.current.location

@@ -20,19 +20,19 @@ variable "environment" {
 
 variable "suffix" {
   type            = string
-  description     = "The suffix of the name of resources"
+  description     = "The suffix of the name of resources. The suffix is used to isolate different integration testing environments"
   default         = ""
 }
 
 variable "tags" {
   type            = map
-  description     = "The tags for the resources"
+  description     = "The common tags for the resources. The tags are added to all resources."
   default         = {}
 }
 
 variable "location" {
   type            = string
-  description     = "The lcoation of resources"
+  description     = "The lcoation of resources deployment"
 
   validation {
     condition     = length(var.location) > 4
@@ -42,7 +42,7 @@ variable "location" {
 
 variable "target" {
   type            = string
-  description     = "The lcoation of resources"
+  description     = "The target of deployment, available options: general, integration_test-shared, integrtion_test"
   default         = "general"
 
   validation {
@@ -54,7 +54,7 @@ variable "target" {
 # Local Development Support
 variable "local_development" {
   type            = bool
-  description     = "Is local development"
+  description     = "Whether current work is local development or not. When the value is true, a few network restriction and safe measures are lifted"
   default         = false
 }
 
