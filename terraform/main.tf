@@ -83,7 +83,7 @@ module "rg-integration_test" {
   tags                = local.tags
   location            = var.location
 }
-#   SIT / QA / UAT / Production
+#   SIT / QA / UAT / PROD
 module "rg-compute" {
   source              = "./modules/resource_group"
   count               = var.target == local.target.general ? 1 : 0
