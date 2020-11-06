@@ -68,7 +68,7 @@ locals {
 # Resource Group
 #   Integration Testing Shared
 module "rg-integration_test-shared" {
-  source              = "./modules/resource_group"
+  source              = "../modules/resource_group"
   count               = var.target == local.target.integration_test-shared ? 1 : 0
 
   name                = local.rg-it-shared
@@ -76,7 +76,7 @@ module "rg-integration_test-shared" {
   location            = var.location
 }
 module "rg-integration_test" {
-  source              = "./modules/resource_group"
+  source              = "../modules/resource_group"
   count               = var.target == local.target.integration_test ? 1 : 0
 
   name                = local.rg-it
@@ -85,7 +85,7 @@ module "rg-integration_test" {
 }
 #   SIT / QA / UAT / PROD
 module "rg-compute" {
-  source              = "./modules/resource_group"
+  source              = "../modules/resource_group"
   count               = var.target == local.target.general ? 1 : 0
 
   name                = local.rg-compute
@@ -93,7 +93,7 @@ module "rg-compute" {
   location            = var.location
 }
 module "rg-data" {
-  source              = "./modules/resource_group"
+  source              = "../modules/resource_group"
   count               = var.target == local.target.general ? 1 : 0
 
   name                = local.rg-data
@@ -103,7 +103,7 @@ module "rg-data" {
 
 # Key Vault
 module "key_vault" {
-  source              = "./modules/key_vault"
+  source              = "../modules/key_vault"
   count               = var.target == local.target.general ? 1 : 0
 
   resource_group      = module.rg-compute[0].name
@@ -121,7 +121,7 @@ module "key_vault" {
 
 # App Configuration
 module "app_configuration" {
-  source              = "./modules/app_configuration"
+  source              = "../modules/app_configuration"
   count               = var.target == local.target.integration_test ? 0 : 1
 
   resource_group      = var.target == local.target.general ? module.rg-compute[0].name : module.rg-integration_test-shared[0].name
@@ -156,7 +156,7 @@ data "azurerm_app_configuration" "integration_test" {
 
 # Application Insight
 module "application_insights" {
-  source              = "./modules/application_insights"
+  source              = "../modules/application_insights"
   count               = var.target == local.target.integration_test ? 0 : 1
 
   resource_group      = var.target == local.target.general ? module.rg-compute[0].name : module.rg-integration_test-shared[0].name
@@ -179,7 +179,7 @@ data "azurerm_application_insights" "integration_test" {
 
 # Func Apps
 module "asp-func_serverless" {
-  source              = "./modules/app_service_plan"
+  source              = "../modules/app_service_plan"
   count               = var.target == local.target.integration_test-shared || length(local.functions) == 0 ? 0 : 1
 
   resource_group      = var.target == local.target.general ? module.rg-compute[0].name : module.rg-integration_test[0].name
@@ -196,7 +196,7 @@ module "asp-func_serverless" {
                         ]
 }
 module "storage_account-func" {
-  source              = "./modules/storage_account"
+  source              = "../modules/storage_account"
   count               = var.target == local.target.integration_test-shared || length(local.functions) == 0 ? 0 : 1
 
   resource_group      = var.target == local.target.general ? module.rg-compute[0].name : module.rg-integration_test[0].name
@@ -213,7 +213,7 @@ module "storage_account-func" {
 module "func" {
   count                     = length(local.functions)
   
-  source                    = "./modules/func_app"
+  source                    = "../modules/func_app"
   
   resource_group            = var.target == local.target.general ? module.rg-compute[0].name : module.rg-integration_test[0].name
   name                      = replace(local.name-suffix, "<name>", "func-${local.functions[count.index].name}")
