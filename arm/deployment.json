@@ -1,0 +1,194 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": "eastus2"
+        },
+        "project_name": {
+            "type": "string"
+        },
+        "tags": {
+            "type": "object",
+            "defaultValue": {}
+        }
+    },
+    "variables": {
+        "resourceGroupName": "[concat('rg-', parameters('project_name'), '-deploy')]",
+        "storageName": "[concat('sa', parameters('project_name'), 'deploy')]",
+        "kvName": "[concat('kv-', parameters('project_name'), '-deploy')]",
+        "defaultTag" : { "project": "[parameters('project_name')]" }
+    },
+    "functions": [],
+    "resources": [
+        {
+            "type": "Microsoft.Resources/resourceGroups",
+            "name": "[variables('resourceGroupName')]",
+            "apiVersion": "2020-06-01",
+            "location": "[parameters('location')]",
+            "tags": "[union(parameters('tags'), variables('defaultTag'))]"
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "storageDeployment",
+            "apiVersion": "2020-06-01",
+            "resourceGroup": "[variables('resourceGroupName')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/resourceGroups/', variables('resourceGroupName'))]"
+            ],
+            "properties": {
+                "expressionEvaluationOptions": {
+                    "scope": "outer"
+                },
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "apiProfile": "2019-03-01-hybrid",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Storage/storageAccounts",
+                            "name": "[variables('storageName')]",
+                            "location": "[parameters('location')]",
+                            "tags": "[union(parameters('tags'), variables('defaultTag'))]",
+                            "sku": {
+                                "name": "Standard_RAGRS",
+                                "tier": "Standard"
+                            },
+                            "kind": "StorageV2",
+                            "properties": {
+                                "accessTier": "Hot",
+                                "minimumTlsVersion": "TLS1_2",
+                                "allowBlobPublicAccess": true,
+                                "supportsHttpsTrafficOnly": true,
+                                "networkAcls": {
+                                    "bypass": "AzureServices",
+                                    "virtualNetworkRules": [],
+                                    "ipRules": [],
+                                    "defaultAction": "Allow"
+                                },
+                                "encryption": {
+                                    "services": {
+                                        "file": {
+                                            "keyType": "Account",
+                                            "enabled": true
+                                        },
+                                        "blob": {
+                                            "keyType": "Account",
+                                            "enabled": true
+                                        }
+                                    },
+                                    "keySource": "Microsoft.Storage"
+                                }
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Storage/storageAccounts/blobServices",
+                            "apiVersion": "2020-08-01-preview",
+                            "name": "[concat(variables('storageName'), '/default')]",
+                            "dependsOn": [
+                                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+                            ],
+                            "sku": {
+                                "name": "Standard_RAGRS",
+                                "tier": "Standard"
+                            },
+                            "properties": {
+                                "cors": {
+                                    "corsRules": []
+                                },
+                                "deleteRetentionPolicy": {
+                                    "enabled": false
+                                }
+                            }
+                        },
+
+
+                        {
+                            "type": "Microsoft.KeyVault/vaults",
+                            "apiVersion": "2016-10-01",
+                            "name": "[variables('kvName')]",
+                            "location": "[parameters('location')]",
+                            "tags": "[union(parameters('tags'), variables('defaultTag'))]",
+                            "properties": {
+                                "sku": {
+                                    "family": "A",
+                                    "name": "Standard"
+                                },
+                                "tenantId": "b758b4c7-35d4-4b8c-85f1-000a417da601",
+                                "accessPolicies": [
+                                    {
+                                        "tenantId": "b758b4c7-35d4-4b8c-85f1-000a417da601",
+                                        "objectId": "6dbe0227-9cc1-49ef-a663-34fe7a4c8a55",
+                                        "permissions": {
+                                            "keys": [
+                                                "Get",
+                                                "List",
+                                                "Update",
+                                                "Create",
+                                                "Import",
+                                                "Delete",
+                                                "Recover",
+                                                "Backup",
+                                                "Restore"
+                                            ],
+                                            "secrets": [
+                                                "Get",
+                                                "List",
+                                                "Set",
+                                                "Delete",
+                                                "Recover",
+                                                "Backup",
+                                                "Restore"
+                                            ],
+                                            "certificates": [
+                                                "Get",
+                                                "List",
+                                                "Update",
+                                                "Create",
+                                                "Import",
+                                                "Delete",
+                                                "Recover",
+                                                "Backup",
+                                                "Restore",
+                                                "ManageContacts",
+                                                "ManageIssuers",
+                                                "GetIssuers",
+                                                "ListIssuers",
+                                                "SetIssuers",
+                                                "DeleteIssuers"
+                                            ]
+                                        }
+                                    }
+                                ],
+                                "enabledForDeployment": false,
+                                "enabledForDiskEncryption": false,
+                                "enabledForTemplateDeployment": true,
+                                "enableSoftDelete": true
+                            }
+                        },       
+                        {
+                            "type": "Microsoft.KeyVault/vaults/secrets",
+                            "apiVersion": "2016-10-01",
+                            "name": "[concat(variables('kvName'), '/StateStorageKey')]",
+                            "location": "[parameters('location')]",
+                            "dependsOn": [
+                                "[resourceId('Microsoft.KeyVault/vaults', variables('kvName'))]"
+                            ],
+                            "properties": {
+                                "attributes": {
+                                    "enabled": true
+                                }
+                            }
+                        }
+                    ],
+                    "outputs": {}
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
