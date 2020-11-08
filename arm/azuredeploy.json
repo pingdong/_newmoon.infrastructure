@@ -15,6 +15,10 @@
         "userId": {
             "type": "string",
             "defaultValue": "6dbe0227-9cc1-49ef-a663-34fe7a4c8a55"
+        },
+        "containerNames": {
+            "type": "array",
+            "defaultValue": ["dev", "prod"]
         }
     },
     "variables": {
@@ -64,6 +68,9 @@
                     },
                     "userId": {
                         "value": "[parameters('userId')]"
+                    },
+                    "containerNames": {
+                        "value": "[parameters('containerNames')]"
                     }
                 },
                 "template": {
@@ -85,6 +92,9 @@
                         },
                         "userId": {
                             "type": "string"
+                        },
+                        "containerNames": {
+                            "type": "array"
                         }
                     },
                     "resources": [
@@ -105,23 +115,27 @@
                                     "bypass": "AzureServices",
                                     "defaultAction": "Allow"
                                 }
-                            },
-                            "resources": [
-                                {
-                                    "type": "blobServices/containers",
-                                    "name": "[concat('default/', 'state-dev')]",
-                                    "dependsOn": [
-                                        "[parameters('storageName')]"
-                                    ]
-                                },
-                                {
-                                    "type": "blobServices/containers",
-                                    "name": "[concat('default/', 'state-prod')]",
-                                    "dependsOn": [
-                                        "[parameters('storageName')]"
-                                    ]
-                                }
-                            ]
+                            }
+                        },
+                        // {
+                        //     "type": "Microsoft.Storage/storageAccounts/blobServices",
+                        //     "name": "[concat(parameters('storageName'), '/default')]",
+                        //     "dependsOn": [
+                        //         "[parameters('storageName')]"
+                        //     ]
+                        // }//,
+                        {
+                            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+                            "name": "[concat(parameters('storageName'), '/default/state-', parameters('containerNames')[copyIndex()])]",
+                            "dependsOn": [
+                                //"[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageName'), 'default')]",
+                                "[parameters('storageName')]"
+                            ],
+                            "copy": {
+                                "name": "containers",
+                                "count": "[length(parameters('containerNames'))]",
+                                "mode": "parallel"
+                            }
                         },
                         
                         // Key Vault
@@ -171,7 +185,7 @@
                                 "[parameters('storageName')]"
                             ],
                             "properties": {
-                                "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageName')), '2017-10-01').keys[0].value]"
+                                "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
                             }
                         }
                     ]
@@ -180,14 +194,3 @@
         }
     ]
 }
-
-// az login
-// az account set --subscription <subscriptin id>
-// az deployment sub create --location <location> --template-file azuredeploy.json --parameters azuredeploy.parameters.json --confirm-with-what-if
-
-
-// ARM TTK
-// Import-Module .\arm-template-toolkit\arm-ttk\arm-ttk.psd1
-// Test-AzTemplate -TemplatePath .
-
-
