@@ -25,7 +25,7 @@
         // Tags
         //    DefaultTag
         "defaultTag" : { "project": "[parameters('project_name')]" },
-        //    Combine Default Tag with 
+        //    Combine default tag with custom tags
         "tags": "[union(parameters('tags'), variables('defaultTag'))]",
         // Resource Names
         "resourceGroupName": "[concat('rg-', parameters('project_name'), '-deploy')]",
@@ -50,9 +50,11 @@
             ],
             "properties": {
                 "expressionEvaluationOptions": {
-                    "scope": "inner"
+                    "scope": "inner"    // Delay evaluation of the expression until that deployment begins.
+                                        // If not, listkeys() to get storage account access key fails
                 },
                 "mode": "Incremental",
+                // Since scope change to 'inner', 'global' parameters/variables won't work
                 "parameters": {
                     "location": {
                         "value": "[parameters('location')]"
@@ -117,18 +119,12 @@
                                 }
                             }
                         },
-                        // {
-                        //     "type": "Microsoft.Storage/storageAccounts/blobServices",
-                        //     "name": "[concat(parameters('storageName'), '/default')]",
-                        //     "dependsOn": [
-                        //         "[parameters('storageName')]"
-                        //     ]
-                        // }//,
+                        // Copying doesn't support nested resource
+                        //    So have to promot container build to root level
                         {
                             "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
                             "name": "[concat(parameters('storageName'), '/default/state-', parameters('containerNames')[copyIndex()])]",
                             "dependsOn": [
-                                //"[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageName'), 'default')]",
                                 "[parameters('storageName')]"
                             ],
                             "copy": {
