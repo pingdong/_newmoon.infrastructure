@@ -1,0 +1,193 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string"
+        },
+        "project_name": {
+            "type": "string"
+        },
+        "tags": {
+            "type": "object",
+            "defaultValue": {}
+        },
+        "userId": {
+            "type": "string",
+            "defaultValue": "6dbe0227-9cc1-49ef-a663-34fe7a4c8a55"
+        }
+    },
+    "variables": {
+        // Tags
+        //    DefaultTag
+        "defaultTag" : { "project": "[parameters('project_name')]" },
+        //    Combine Default Tag with 
+        "tags": "[union(parameters('tags'), variables('defaultTag'))]",
+        // Resource Names
+        "resourceGroupName": "[concat('rg-', parameters('project_name'), '-deploy')]",
+        "kvName": "[concat('kv-', parameters('project_name'), '-deploy')]",
+        "storageName": "[concat('sa', parameters('project_name'), 'deploy')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/resourceGroups",
+            "apiVersion": "2020-06-01",
+            "location": "[parameters('location')]",
+            "name": "[variables('resourceGroupName')]",
+            "tags": "[variables('tags')]"
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-06-01",
+            "resourceGroup": "[variables('resourceGroupName')]",
+            "name": "deployment",
+            "dependsOn": [
+                "[variables('resourceGroupName')]"
+            ],
+            "properties": {
+                "expressionEvaluationOptions": {
+                    "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                    "location": {
+                        "value": "[parameters('location')]"
+                    },
+                    "storageName": {
+                        "value": "[variables('storageName')]"
+                    },
+                    "kvName": {
+                        "value": "[variables('kvName')]"
+                    },
+                    "tags": {
+                        "value": "[variables('tags')]"
+                    },
+                    "userId": {
+                        "value": "[parameters('userId')]"
+                    }
+                },
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "apiProfile": "2019-03-01-hybrid",
+                    "parameters": {
+                        "location": {
+                            "type": "string"
+                        },
+                        "storageName": {
+                            "type": "string"
+                        },
+                        "kvName": {
+                            "type": "string"
+                        },
+                        "tags": {
+                            "type": "object"
+                        },
+                        "userId": {
+                            "type": "string"
+                        }
+                    },
+                    "resources": [
+                        {
+                            // Storage Account
+                            "type": "Microsoft.Storage/storageAccounts",
+                            "name": "[parameters('storageName')]",
+                            "location": "[parameters('location')]",
+                            "tags": "[parameters('tags')]",
+                            "kind": "StorageV2",
+                            "sku": {
+                                "name": "Standard_RAGRS",
+                                "tier": "Standard"
+                            },
+                            "properties": {
+                                "accessTier": "Hot",
+                                "networkAcls": {
+                                    "bypass": "AzureServices",
+                                    "defaultAction": "Allow"
+                                }
+                            },
+                            "resources": [
+                                {
+                                    "type": "blobServices/containers",
+                                    "name": "[concat('default/', 'state-dev')]",
+                                    "dependsOn": [
+                                        "[parameters('storageName')]"
+                                    ]
+                                },
+                                {
+                                    "type": "blobServices/containers",
+                                    "name": "[concat('default/', 'state-prod')]",
+                                    "dependsOn": [
+                                        "[parameters('storageName')]"
+                                    ]
+                                }
+                            ]
+                        },
+                        
+                        // Key Vault
+                        {
+                            "type": "Microsoft.KeyVault/vaults",
+                            "name": "[parameters('kvName')]",
+                            "location": "[parameters('location')]",
+                            "tags": "[parameters('tags')]",
+                            "properties": {
+                                "sku": {
+                                    "family": "A",
+                                    "name": "Standard"
+                                },
+                                "tenantId": "[subscription().tenantId]",
+                                "enabledForDeployment": true,
+                                "enabledForDiskEncryption": false,
+                                "enabledForTemplateDeployment": true,
+                                "enableSoftDelete": false,
+                                "networkAcls": {
+                                    "bypass": "AzureServices"
+                                },
+                                "accessPolicies": [
+                                    {
+                                        "tenantId": "[subscription().tenantId]",
+                                        "objectId": "[parameters('userId')]",
+                                        "permissions": {
+                                            "secrets": [
+                                                "Get",
+                                                "List",
+                                                "Set",
+                                                "Delete",
+                                                "Recover",
+                                                "Backup",
+                                                "Restore"
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "type": "Microsoft.KeyVault/vaults/secrets",
+                            "name": "[concat(parameters('kvName'), '/StateStorageKey')]",
+                            "location": "[parameters('location')]",
+                            "dependsOn": [
+                                "[parameters('kvName')]",
+                                "[parameters('storageName')]"
+                            ],
+                            "properties": {
+                                "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageName')), '2017-10-01').keys[0].value]"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
+
+// az login
+// az account set --subscription <subscriptin id>
+// az deployment sub create --location <location> --template-file azuredeploy.json --parameters azuredeploy.parameters.json --confirm-with-what-if
+
+
+// ARM TTK
+// Import-Module .\arm-template-toolkit\arm-ttk\arm-ttk.psd1
+// Test-AzTemplate -TemplatePath .
+
+
