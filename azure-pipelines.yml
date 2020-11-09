@@ -1,6 +1,9 @@
+trigger: none
+pr: none
+
 variables:
 - group: Pipeline
-- group: Management 
+- group: Management
 
 stages:
 # Management Resource
@@ -18,9 +21,9 @@ stages:
         displayName: Deploying
         inputs:
           deploymentScope: Subscription
-          ConnectedServiceName: Azure
+          ConnectedServiceName: ${{ variables['management#state.azure.connection'] }}
           #azureResourceManagerConnection: Azure #${{ variables['management#state.azure.connection'] }}
-          subscriptionId: '180ecb74-b1c1-4333-afa1-9b42bbc049ac' # ${{ variables['management#state.azure.subscription'] }}
-          location: eastus2 # ${{ variables['management#state.azure.location'] }}
+          subscriptionId: ${{ variables['management#state.azure.subscription'] }}
+          location: ${{ variables['management#state.azure.location'] }}
           csmFile: ./arm/azuredeploy.json
           csmParametersFile: ./arm/azuredeploy.parameters.json
