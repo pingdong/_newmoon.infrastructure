@@ -21,9 +21,9 @@ stages:
         displayName: Deploying
         inputs:
           deploymentScope: Subscription
-          ConnectedServiceName: Azure # ${{ variables['management#state.azure.connection'] }}
+          ConnectedServiceName: Azure # $(management#state.azure.connection)
           #azureResourceManagerConnection: Azure #${{ variables['management#state.azure.connection'] }}
-          subscriptionId: ${{ variables['management#state.azure.subscription'] }}
-          location: ${{ variables['management#state.azure.location'] }}
+          subscriptionId: $(management#state.azure.subscription)
+          location: $(management#state.azure.location)
           csmFile: ./arm/azuredeploy.json
           csmParametersFile: ./arm/azuredeploy.parameters.json
