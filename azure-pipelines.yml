@@ -1,0 +1,30 @@
+parameters:
+- name: poolImage
+  type: string
+  default: ubuntu-latest
+
+variables:
+- group: Pipeline
+- group: Management 
+
+stages:
+# Management Resource
+- stage: ManagementResource
+  displayName: Deploy Management Resources
+  jobs:
+    - job: TerraformStateStorageBuild
+      displayName: Build Terraform State Storage
+      pool:
+        poolImage: ${{ variables['pipeline#vmImage'] }}
+      workspace:
+        clean: all
+      steps:
+      - task: AzureResourceManagerTemplateDeployment@3
+        displayName: Deploying
+        inputs:
+          deploymentScope: Subscription
+          azureResourceManagerConnection: ${{ variables['management#state.azure.connection'] }}
+          subscriptionId: ${{ variables['management#state.azure.subscription'] }}
+          location: ${{ variables['management#state.azure.location'] }}
+          csmFile: ./arm/azuredeploy.json
+          csmParametersFile: ./arm/azuredeploy.parameters.json
