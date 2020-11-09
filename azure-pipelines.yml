@@ -21,7 +21,7 @@ stages:
         displayName: Deploying
         inputs:
           deploymentScope: Subscription
-          ConnectedServiceName: ${{ variables['management#state.azure.connection'] }}
+          ConnectedServiceName: Azure # ${{ variables['management#state.azure.connection'] }}
           #azureResourceManagerConnection: Azure #${{ variables['management#state.azure.connection'] }}
           subscriptionId: ${{ variables['management#state.azure.subscription'] }}
           location: ${{ variables['management#state.azure.location'] }}
