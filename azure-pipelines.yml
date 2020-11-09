@@ -7,13 +7,13 @@ variables:
 
 stages:
 # Management Resource
-- stage: ManagementResource
+- stage: DeployManagementResource
   displayName: Deploy Management Resources
   jobs:
-    - job: TerraformStateStorageBuild
-      displayName: Build Terraform State Storage
+    - job: TerraformStateStorage
+      displayName: Terraform State Storage
       pool:
-        poolImage: ${{ variables['pipeline#vmImage'] }}
+        poolImage: $(pipeline#vmImage)
       workspace:
         clean: all
       steps:
@@ -21,8 +21,7 @@ stages:
         displayName: Deploying
         inputs:
           deploymentScope: Subscription
-          ConnectedServiceName: $(management#state.azure.connection)
-          #azureResourceManagerConnection: Azure #${{ variables['management#state.azure.connection'] }}
+          connectedServiceName: $(management#state.azure.connection)
           subscriptionId: $(management#state.azure.subscription)
           location: $(management#state.azure.location)
           csmFile: ./arm/azuredeploy.json
