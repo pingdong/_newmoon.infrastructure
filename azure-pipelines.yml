@@ -3,7 +3,6 @@ pr: none
 
 variables:
 - group: Pipeline
-- group: Management
 
 stages:
 # Management Resource
@@ -21,8 +20,8 @@ stages:
         displayName: Deploying
         inputs:
           deploymentScope: Subscription
-          connectedServiceName: $(management#state.azure.connection)
-          subscriptionId: $(management#state.azure.subscription)
-          location: $(management#state.azure.location)
+          connectedServiceName: $(pipeline#azure.subscription)
+          subscriptionId: $(pipeline#azure.subscription.id)
+          location: $(pipeline#azure.location)
           csmFile: ./arm/azuredeploy.json
           csmParametersFile: ./arm/azuredeploy.parameters.json
