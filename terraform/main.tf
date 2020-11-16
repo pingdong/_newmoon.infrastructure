@@ -61,7 +61,7 @@ locals {
                         {
                           name          = "venue"
                           app_settings  = {}
-                          slots         = []
+                          slots         = ["stage"]
                         }
                       )
   #   Building keys list for filtering out func apps that do(es)n't include in the current testing
