@@ -10,7 +10,7 @@ stages:
   displayName: Deploy Management Resources
   jobs:
     - job: TerraformStateStorage
-      displayName: Terraform State Storage
+      displayName: Building Terraform Backend
       pool:
         poolImage: $(pipeline#vmImage)
       workspace:
