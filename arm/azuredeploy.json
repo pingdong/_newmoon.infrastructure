@@ -15,7 +15,7 @@
         },
         "devopsClientId": {
             "type": "string",
-            // The Object ID of the Azure Connection's pricinpal ID
+            // The Object ID of the Azure Connection's principal ID
             "defaultValue": "80545c3b-a968-404c-b6c1-4e789564028c"
         },
         "containerNames": {
