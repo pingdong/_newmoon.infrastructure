@@ -114,8 +114,11 @@ module "key_vault" {
   tags                = local.tags
   
   sku                 = "standard"
-  #                     Relax restriction for local development
-  default_acl_action  = var.local_development ? "Allow" : "Deny"
+  network_acls        {
+                        # Relax restriction for local development
+                        default_action = var.local_development ? "Allow" : "Deny"
+                        bypass = "AzureServices"
+                      }
 
   depends_on          = [
                           module.rg-compute
