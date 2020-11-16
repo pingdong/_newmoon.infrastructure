@@ -115,7 +115,7 @@ module "key_vault" {
   
   sku                 = "standard"
                       # Relax restriction for local development
-  default_acl_action  = var.local_development ? "Allow" : "Deny"
+  default_acl_action  = "Allow" #var.local_development ? "Allow" : "Deny"
 
   depends_on          = [
                           module.rg-compute
