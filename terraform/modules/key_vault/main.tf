@@ -20,7 +20,8 @@ resource "azurerm_key_vault" "current" {
 
   network_acls {    
     default_action            = var.default_acl_action    # Need relax some restrictions in local development
-    bypass                    = "AzureServices"
+    bypass                    = var.bypass_azure_services ? "AzureServices" : "None"
+    ip_rules                  = var.ip_rules
   }
 
   access_policy {

@@ -46,3 +46,15 @@ variable "default_acl_action" {
     error_message = "Argument \"sku\" must be either \"Allow\" or \"Deny\"."
   }
 }
+
+variable "ip_rules" {
+  type            = list(string)
+  description     = "The allowed IPs"
+  default         = []
+}
+
+variable "bypass_azure_services" {
+  type            = bool
+  description     = "Should bypass Azure Services or not"
+}
+

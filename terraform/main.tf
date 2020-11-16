@@ -106,18 +106,39 @@ module "rg-data" {
 
 # Key Vault
 module "key_vault" {
-  source              = "./modules/key_vault"
-  count               = var.target == local.target.general ? 1 : 0
+  source                = "./modules/key_vault"
+  count                 = var.target == local.target.general ? 1 : 0
 
-  resource_group      = module.rg-data[0].name
-  name                = replace(local.name, "<name>", "kv")
-  tags                = local.tags
+  resource_group        = module.rg-data[0].name
+  name                  = replace(local.name, "<name>", "kv")
+  tags                  = local.tags
   
-  sku                 = "standard"
-                      # Relax restriction for local development
-  default_acl_action  = "Allow" #var.local_development ? "Allow" : "Deny"
+  sku                   = "standard"
+                        # Relax restriction for development
+  default_acl_action    = var.local_development ? "Allow" : "Deny"
+  bypass_azure_services = true
+  allowed_ip            = [
+                          "20.37.158.0/23",
+                          "20.37.194.0/24",
+                          "20.39.13.0/26",
+                          "20.41.6.0/23",
+                          "20.41.194.0/24",
+                          "20.42.5.0/24",
+                          "20.42.134.0/23",
+                          "20.42.226.0/24",
+                          "20.45.196.64/26",
+                          "20.189.107.0/24",
+                          "40.74.28.0/23",
+                          "40.80.187.0/24",
+                          "40.82.252.0/24",
+                          "40.119.10.0/24",
+                          "51.104.26.0/24",
+                          "52.150.138.0/24",
+                          "52.228.82.0/24",
+                          "191.235.226.0/24"
+                        ]  
 
-  depends_on          = [
+  depends_on            = [
                           module.rg-compute
                         ]
 }
