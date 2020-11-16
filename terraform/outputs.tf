@@ -4,9 +4,17 @@ output "rg-integration_test_name" {
 }
 
 output "rg-compute_name" {
-  value = var.target == "integration_test" ? "" : module.rg-data[0].name
+  value = var.target == "integration_test" ? "" : module.rg-compute[0].name
 }
 
 output "rg-data_name" {
   value = var.target == "integration_test" ? "" : module.rg-data[0].name
+}
+
+output "func-venue-name" {
+  value = module.func[0].name
+}
+
+output "func-venue-slot_name" {
+  value = module.func[0].slot_name
 }
