@@ -29,7 +29,7 @@
         //    Combine default tag with custom tags
         "tags": "[union(parameters('tags'), variables('defaultTag'))]",
         // Resource Names
-        "resourceGroupName": "[concat('rg-', parameters('project_name'), '-deploy')]",
+        "resourceGroupName": "[concat(parameters('project_name'), '-deploy')]",
         "kvName": "[concat('kv-', parameters('project_name'), '-deploy')]",
         "storageName": "[concat('sa', parameters('project_name'), 'deploy')]"
     },
