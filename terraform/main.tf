@@ -109,7 +109,7 @@ module "key_vault" {
   source              = "./modules/key_vault"
   count               = var.target == local.target.general ? 1 : 0
 
-  resource_group      = module.rg-compute[0].name
+  resource_group      = module.rg-data[0].name
   name                = replace(local.name, "<name>", "kv")
   tags                = local.tags
   
@@ -130,7 +130,7 @@ module "app_configuration" {
   source              = "./modules/app_configuration"
   count               = var.target == local.target.integration_test ? 0 : 1
 
-  resource_group      = var.target == local.target.general ? module.rg-compute[0].name : module.rg-integration_test-shared[0].name
+  resource_group      = var.target == local.target.general ? module.rg-data[0].name : module.rg-integration_test-shared[0].name
   name                = replace(local.name, "<name>", "ac")
   tags                = local.tags
 
@@ -165,7 +165,7 @@ module "application_insights" {
   source              = "./modules/application_insights"
   count               = var.target == local.target.integration_test ? 0 : 1
 
-  resource_group      = var.target == local.target.general ? module.rg-compute[0].name : module.rg-integration_test-shared[0].name
+  resource_group      = var.target == local.target.general ? module.rg-data[0].name : module.rg-integration_test-shared[0].name
   name                = replace(local.name, "<name>", "ai")
   tags                = local.tags
 
