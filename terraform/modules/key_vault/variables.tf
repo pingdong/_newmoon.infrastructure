@@ -56,5 +56,6 @@ variable "ip_rules" {
 variable "bypass_azure_services" {
   type            = bool
   description     = "Should bypass Azure Services or not"
+  default         = true
 }
 
