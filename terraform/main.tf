@@ -117,7 +117,7 @@ module "key_vault" {
                         # Relax restriction for development
   default_acl_action    = var.local_development ? "Allow" : "Deny"
   bypass_azure_services = true
-  allowed_ip            = [
+  ip_rules              = [
                           "20.37.158.0/23",
                           "20.37.194.0/24",
                           "20.39.13.0/26",
