@@ -13,9 +13,10 @@
             "type": "object",
             "defaultValue": {}
         },
-        "userId": {
+        "devopsClientId": {
             "type": "string",
-            "defaultValue": "6dbe0227-9cc1-49ef-a663-34fe7a4c8a55"
+            // The Object ID of the Azure Connection's pricinpal ID
+            "defaultValue": "80545c3b-a968-404c-b6c1-4e789564028c"
         },
         "containerNames": {
             "type": "array",
@@ -67,8 +68,8 @@
                     "tags": {
                         "value": "[variables('tags')]"
                     },
-                    "userId": {
-                        "value": "[parameters('userId')]"
+                    "devopsClientId": {
+                        "value": "[parameters('devopsClientId')]"
                     },
                     "containerNames": {
                         "value": "[parameters('containerNames')]"
@@ -91,7 +92,7 @@
                         "tags": {
                             "type": "object"
                         },
-                        "userId": {
+                        "devopsClientId": {
                             "type": "string"
                         },
                         "containerNames": {
@@ -151,24 +152,24 @@
                                 "enableSoftDelete": false,
                                 "networkAcls": {
                                     "bypass": "AzureServices"
-                                }//,
-                                // "accessPolicies": [
-                                //     {
-                                //         "tenantId": "[subscription().tenantId]",
-                                //         "objectId": "[parameters('userId')]",
-                                //         "permissions": {
-                                //             "secrets": [
-                                //                 "Get",
-                                //                 "List",
-                                //                 "Set",
-                                //                 "Delete",
-                                //                 "Recover",
-                                //                 "Backup",
-                                //                 "Restore"
-                                //             ]
-                                //         }
-                                //     }
-                                // ]
+                                },
+                                "accessPolicies": [
+                                    {
+                                        "tenantId": "[subscription().tenantId]",
+                                        "objectId": "[parameters('devopsClientId')]",
+                                        "permissions": {
+                                            "secrets": [
+                                                "Get",
+                                                "List",
+                                                "Set",
+                                                "Delete",
+                                                "Recover",
+                                                "Backup",
+                                                "Restore"
+                                            ]
+                                        }
+                                    }
+                                ]
                             }
                         },
                         {
