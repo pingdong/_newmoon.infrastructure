@@ -30,6 +30,7 @@ output "func-venue-name" {
   value = module.func[0].name
 }
 
+// TODO: Don't show slot_name output if not create slot
 output "func-venue-slot_name" {
   value = module.func[0].slot_name
 }
