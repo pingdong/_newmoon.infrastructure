@@ -261,7 +261,7 @@ module "func" {
                                 # Keyvault is not required in the integration testing
                                 value = var.target == local.target.general ? replace("@Microsoft.KeyVault(SecretUri=<id>)", "<id>", azurerm_key_vault_secret.app_configuration[0].id) : data.azurerm_app_configuration.integration_test[0].primary_read_key.0.connection_string
                               }]
-  slots                     = local.functions[count.index].slots
+  slots                     = var.target == local.target.general ? local.functions[count.index].slots : []
 
   depends_on                = [
                                 module.rg-compute,
