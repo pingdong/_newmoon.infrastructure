@@ -29,8 +29,8 @@
         //    Combine default tag with custom tags
         "tags": "[union(parameters('tags'), variables('defaultTag'))]",
         // Resource Names
-        "resourceGroupName": "[concat(parameters('project_name'), '-deploy')]",
-        "kvName": "[concat('kv-', parameters('project_name'), '-deploy')]",
+        "resourceGroupName": "[concat(parameters('project_name'), '-management')]",
+        "kvName": "[concat('kv-', parameters('project_name'), '-management')]",
         "storageName": "[concat('sa', parameters('project_name'), 'deploy')]"
     },
     "resources": [
@@ -151,24 +151,24 @@
                                 "enableSoftDelete": false,
                                 "networkAcls": {
                                     "bypass": "AzureServices"
-                                },
-                                "accessPolicies": [
-                                    {
-                                        "tenantId": "[subscription().tenantId]",
-                                        "objectId": "[parameters('userId')]",
-                                        "permissions": {
-                                            "secrets": [
-                                                "Get",
-                                                "List",
-                                                "Set",
-                                                "Delete",
-                                                "Recover",
-                                                "Backup",
-                                                "Restore"
-                                            ]
-                                        }
-                                    }
-                                ]
+                                }//,
+                                // "accessPolicies": [
+                                //     {
+                                //         "tenantId": "[subscription().tenantId]",
+                                //         "objectId": "[parameters('userId')]",
+                                //         "permissions": {
+                                //             "secrets": [
+                                //                 "Get",
+                                //                 "List",
+                                //                 "Set",
+                                //                 "Delete",
+                                //                 "Recover",
+                                //                 "Backup",
+                                //                 "Restore"
+                                //             ]
+                                //         }
+                                //     }
+                                // ]
                             }
                         },
                         {
