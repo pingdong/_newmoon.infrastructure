@@ -20,7 +20,7 @@
         },
         "containerNames": {
             "type": "array",
-            "defaultValue": ["dev", "prod"]
+            "defaultValue": ["dev", "prod", "integrationtestings"]
         }
     },
     "variables": {
