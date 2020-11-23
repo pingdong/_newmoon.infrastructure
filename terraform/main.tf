@@ -53,7 +53,7 @@ locals {
   target                    = {
     general                 = "general"
     integration_test-shared = "integration_test-shared"
-    integration_test        = "integrtion_test"
+    integration_test        = "integration_test"
   }
   environment               = {
     development             = "dev"
