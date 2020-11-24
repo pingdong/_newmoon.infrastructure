@@ -1,5 +1,3 @@
-// TODO: Don't show output if not create
-
 output "rg-integration_test_name" {
   # Only output integration test for cleaning up
   value = var.target == "integration_test" ? module.rg-integration_test[0].name : ""
@@ -24,3 +22,5 @@ output "func-venue-slot_name" {
 output "func-venue-baseUrl" {
   value = var.target == "general" || contains(var.integration_testing.features, "venue") ? replace("https://<func_name>.azurewebsites.net/", "<func_name>", module.func[0].name) : ""
 }
+
+// TODO: Output masterKey of the Function
