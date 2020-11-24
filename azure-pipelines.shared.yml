@@ -1,0 +1,33 @@
+trigger: none
+pr: none
+
+stages:
+# Integration Testing
+- stage: DeploySharedResource
+  displayName: Deploying Shared Resources
+  jobs:
+  - job: IntegrationTesting
+    displayName: Integration Testing
+    pool:
+      vmImage: $(test.integration#vmImage)
+    variables:
+    - group: Pipeline
+    - group: Pipeline.Terraform
+    - group: Pipeline.Terraform.Secret
+    - group: Test.Integration
+    - name  : local#service.name
+      value : newmoon
+    workspace:
+      clean: all
+    steps:
+    # Provisioning Shared Resources of Integration Testing 
+    - template: templates\terraform.apply.yml@templates
+      parameters:
+        azureSubscription: $(pipeline#azure.subscription)
+        stateResourceGroup: $(pipeline.terraform#resourceGroup)
+        stateStorageAccount: $(pipeline.terraform#storageAccount)
+        stateStorageAccountContainer: $(pipeline.terraform#storageAccount.container.integrationTestings)
+        stateStorageAccountKey: $(StateStorageKey) # <- from Pipeline.Terraform.Secret
+        workingDirectory: $(Build.SourcesDirectory)/terraform
+        variables: '-var service=$(local#service.name) -var environment=$(test.integration#environment.name) -var location=$(pipeline#azure.location) -var target=integration_test-shared'
+    
