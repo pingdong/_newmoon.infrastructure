@@ -9,19 +9,19 @@ stages:
 - stage: DeployManagementResource
   displayName: Deploy Management Resources
   jobs:
-    - job: TerraformStateStorage
-      displayName: Building Terraform Backend
-      pool:
-        poolImage: $(pipeline#vmImage)
-      workspace:
-        clean: all
-      steps:
-      - task: AzureResourceManagerTemplateDeployment@3
-        displayName: Deploying
-        inputs:
-          deploymentScope: Subscription
-          connectedServiceName: $(pipeline#azure.subscription)
-          subscriptionId: $(pipeline#azure.subscription.id)
-          location: $(pipeline#azure.location)
-          csmFile: ./arm/azuredeploy.json
-          csmParametersFile: ./arm/azuredeploy.parameters.json
+  - job: TerraformStateStorage
+    displayName: Building Terraform Backend
+    pool:
+      poolImage: $(pipeline#vmImage)
+    workspace:
+      clean: all
+    steps:
+    - task: AzureResourceManagerTemplateDeployment@3
+      displayName: Deploying
+      inputs:
+        deploymentScope: Subscription
+        connectedServiceName: $(pipeline#azure.subscription)
+        subscriptionId: $(pipeline#azure.subscription.id)
+        location: $(pipeline#azure.location)
+        csmFile: ./arm/azuredeploy.json
+        csmParametersFile: ./arm/azuredeploy.parameters.json
