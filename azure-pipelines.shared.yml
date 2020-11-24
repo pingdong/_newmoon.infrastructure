@@ -9,6 +9,9 @@ resources:
 trigger: none
 pr: none
 
+variables:
+- group: Pipeline
+
 stages:
 # Integration Testing
 - stage: DeploySharedResource
@@ -19,7 +22,6 @@ stages:
     pool:
       vmImage: $(test.integration#vmImage)
     variables:
-    - group: Pipeline
     - group: Pipeline.Terraform
     - group: Pipeline.Terraform.Secret
     - group: Test.Integration
