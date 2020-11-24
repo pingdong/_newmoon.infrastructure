@@ -3,6 +3,6 @@
 service             = "newmoon"
 environment         = "dev"
 tags                = {}
-location            = "East US"
+location            = "East US 2"
                     
 local_development   = true
