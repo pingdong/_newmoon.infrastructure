@@ -12,7 +12,7 @@ output "rg-data_name" {
 }
 
 output "func-venue-name" {
-  value = var.target == "general" || contains(var.integration_testing.features, "venue")  ? module.func[0].name : ""
+  value = var.target == "general" || contains(var.integration_testing-features, "venue")  ? module.func[0].name : ""
 }
 
 output "func-venue-slot_name" {
@@ -20,7 +20,7 @@ output "func-venue-slot_name" {
 }
 
 output "func-venue-baseUrl" {
-  value = var.target == "general" || contains(var.integration_testing.features, "venue") ? replace("https://<func_name>.azurewebsites.net/", "<func_name>", module.func[0].name) : ""
+  value = var.target == "general" || contains(var.integration_testing-features, "venue") ? replace("https://<func_name>.azurewebsites.net/", "<func_name>", module.func[0].name) : ""
 }
 
 // TODO: Output masterKey of the Function

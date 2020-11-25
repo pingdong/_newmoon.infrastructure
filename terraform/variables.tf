@@ -59,14 +59,13 @@ variable "local_development" {
 }
 
 # Integration Testing Support
-variable "integration_testing" {
-  type            = object({
-                      features  = list(string)
-                      suffix    = string
-                    })
-  description     = "The parameters of the integration testing"
-  default         = {
-                      features  = []
-                      suffix    = ""
-                    }
+variable "integration_testing-features" {
+  type            = list(string)
+  description     = "The features of the integration testing"
+  default         = []
+}
+
+variable "integration_testing-suffix" {
+  type            = string
+  description     = "Separate different integration test"
 }

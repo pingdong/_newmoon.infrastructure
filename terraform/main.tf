@@ -36,13 +36,13 @@ locals {
                       )
   
   # The reason of using <> as placeholder is <> is invalid for most resources. It avoids unintent errors.
-  name-suffix       = "${var.service}-${var.environment}-<name>%{ if var.integration_testing.suffix != "" }-${var.integration_testing.suffix}%{ endif }"
+  name-suffix       = "${var.service}-${var.environment}-<name>%{ if var.integration_testing-suffix != "" }-${var.integration_testing-suffix}%{ endif }"
   name              = "${var.service}-${var.environment}-<name>"
   
   # Resource Groups
   rg-compute        = "${var.service}-${var.environment}-compute"
   rg-data           = "${var.service}-${var.environment}-data"
-  rg-it             = "${var.service}-${var.environment}-${var.integration_testing.suffix}"
+  rg-it             = "${var.service}-${var.environment}-${var.integration_testing-suffix}"
   rg-it-shared      = "${var.service}-${var.environment}"
 
   # Configuration Keys
@@ -70,7 +70,7 @@ locals {
                       )
   #   Building keys list for filtering out func apps that do(es)n't include in the current testing
   functionAppKeys   = [for fa in local.functionApps : fa.name]
-  functions         = var.target == local.target.general ? local.functionApps : matchkeys(local.functionApps, local.functionAppKeys, var.integration_testing.features)
+  functions         = var.target == local.target.general ? local.functionApps : matchkeys(local.functionApps, local.functionAppKeys, var.integration_testing-features)
 }
 
 # Resource Group
