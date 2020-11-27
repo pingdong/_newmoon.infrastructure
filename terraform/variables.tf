@@ -68,5 +68,5 @@ variable "integration_testing-features" {
 variable "integration_testing-suffix" {
   type            = string
   description     = "Separate different integration test"
-  default =       = ""
+  default         = ""
 }
