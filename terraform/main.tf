@@ -36,14 +36,13 @@ locals {
                       )
   
   # The reason of using <> as placeholder is <> is invalid for most resources. It avoids unintent errors.
-  suffix            = substr(uuid(), 0, 6)
-  name-suffix       = "${var.service}-${var.environment}-<name>%{ if var.target == "integration_testing" }-${local.suffix}%{ endif }"
+  name-suffix       = "${var.service}-${var.environment}-<name>%{ if var.integration_testing-suffix != "" }-${var.integration_testing-suffix}%{ endif }"
   name              = "${var.service}-${var.environment}-<name>"
   
   # Resource Groups
   rg-compute        = "${var.service}-${var.environment}-compute"
   rg-data           = "${var.service}-${var.environment}-data"
-  rg-it             = "${var.service}-${var.environment}-${local.suffix}"
+  rg-it             = "${var.service}-${var.environment}-${var.integration_testing-suffix}"
   rg-it-shared      = "${var.service}-${var.environment}"
 
   # Configuration Keys

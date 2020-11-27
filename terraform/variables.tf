@@ -64,3 +64,9 @@ variable "integration_testing-features" {
   description     = "The features of the integration testing"
   default         = []
 }
+
+variable "integration_testing-suffix" {
+  type            = string
+  description     = "Separate different integration test"
+  default         = substr(uuid(), 0, 6)
+}
