@@ -42,7 +42,7 @@ variable "location" {
 
 variable "target" {
   type            = string
-  description     = "The target of deployment, available options: general, integration_test-shared, integrtion_test"
+  description     = "The target of deployment, available options: general, integration_test-shared, integration_test"
   default         = "general"
 
   validation {
