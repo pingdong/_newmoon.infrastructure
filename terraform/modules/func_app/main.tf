@@ -47,7 +47,7 @@ resource "azurerm_function_app_slot" "current" {
 
   function_app_name          = azurerm_function_app.current.name
   
-  name                       = "${var.slots[count.index]}"
+  name                       = var.slots[count.index]
   location                   = data.azurerm_resource_group.current.location
   resource_group_name        = data.azurerm_resource_group.current.name
   
