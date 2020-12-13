@@ -52,6 +52,12 @@
                 "expressionEvaluationOptions": {
                     "scope": "inner"    // Delay evaluation of the expression until that deployment begins.
                                         // If not, listkeys() to get storage account access key fails
+
+                                        /* 
+                                        When scope is set to outer, you can't use the reference and list* function in the outputs section of a 
+                                        nested template for a resource you have deployed in the nested template. To return the values for a deployed
+                                        resource in a nested template, either use inner scope or convert your nested template to a linked template.
+                                        */
                 },
                 "mode": "Incremental",
                 // Since scope change to 'inner', 'global' parameters/variables won't work
